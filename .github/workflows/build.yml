@@ -60,6 +60,7 @@ jobs:
     #     asset_content_type: application/gzip
 
     - name: Upload HLS Wrapper Artifact
+      if: matrix.ghc == '8.10.1'
       uses: actions/upload-artifact@v2
       with:
         name: haskell-language-server-wrapper-${{ runner.OS }}.gz
