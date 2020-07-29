@@ -50,7 +50,7 @@ jobs:
     - name: Set some linux specific things
       if: matrix.os == 'ubuntu-latest'
       run: |
-        echo '::set-env name=LINUX_CABAL_ARGS::--enable-executable-static --ghc-options=-split-sections'
+        echo '::set-env name=LINUX_CABAL_ARGS::--ghc-options=-split-sections'
 
     - name: Build Server
       # Try building it twice in case of flakey builds on Windows
