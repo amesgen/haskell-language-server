@@ -22,7 +22,7 @@ jobs:
       with:
         submodules: true
 
-    - name: Build Server
+    - name: Build
       run: |
         docker run \
           -v $(pwd):/mnt \
@@ -31,10 +31,21 @@ jobs:
           utdemir/ghc-musl:v8-libgmp-ghc$(echo ${{ matrix.ghc }} | sed 's/\.//g') \
           bash /mnt/.github/workflows/build.sh
 
+    - name: Compress
+      run: |
+        gzip --best artifacts/haskell-language-server
+
+    - uses: actions/upload-release-asset@v1
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: artifacts/haskell-language-server.gz
+        asset_name: haskell-language-server-${{ runner.OS }}-${{ matrix.ghc }}.gz
+        asset_content_type: application/gzip
+
     - uses: actions/upload-artifact@v2
       with:
-        name: haskell-language-server-Linux-${{ matrix.ghc }}
-        path: artifacts/haskell-language-server
+        name: haskell-language-server-Linux-${{ matrix.ghc }}.gz
+        path: artifacts/haskell-language-server.gz
 
   build-non-linux:
     runs-on: ${{ matrix.os }}
