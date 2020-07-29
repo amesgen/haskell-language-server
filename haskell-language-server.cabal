@@ -129,7 +129,6 @@ executable haskell-language-server
               -- disable parallel GC
               -- increase nursery size
               "-with-rtsopts=-I0 -qg -A128M"
-              -static -optl-static -optl-pthread -fPIC
   if flag(pedantic)
      ghc-options:      -Werror
 

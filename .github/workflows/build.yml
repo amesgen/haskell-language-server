@@ -28,7 +28,7 @@ jobs:
           -v $(pwd):/mnt \
           -e GHC_VERSION=${{ matrix.ghc }} \
           -w /mnt \
-          utdemir/ghc-musl:v8-libgmp-ghc$(echo ${{ matrix.ghc }} | sed 's/\.//g') \
+          utdemir/ghc-musl:v9-libgmp-ghc$(echo ${{ matrix.ghc }} | sed 's/\.//g') \
           bash /mnt/.github/workflows/build.sh
 
     - name: Compress
