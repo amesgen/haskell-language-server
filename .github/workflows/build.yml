@@ -34,19 +34,36 @@ jobs:
 
     - name: Compress
       run: |
-        gzip --best artifacts/haskell-language-server
+        gzip --best artifacts/*
 
-    - uses: actions/upload-release-asset@v1
-      with:
-        upload_url: ${{ github.event.release.upload_url }}
-        asset_path: artifacts/haskell-language-server.gz
-        asset_name: haskell-language-server-${{ runner.OS }}-${{ matrix.ghc }}.gz
-        asset_content_type: application/gzip
+    # - name: Upload HLS Release Asset
+    #   uses: actions/upload-release-asset@v1
+    #   with:
+    #     upload_url: ${{ github.event.release.upload_url }}
+    #     asset_path: artifacts/haskell-language-server.gz
+    #     asset_name: haskell-language-server-${{ runner.OS }}-${{ matrix.ghc }}.gz
+    #     asset_content_type: application/gzip
 
-    - uses: actions/upload-artifact@v2
+    - name: Upload HLS Artifact
+      uses: actions/upload-artifact@v2
       with:
-        name: haskell-language-server-Linux-${{ matrix.ghc }}.gz
+        name: haskell-language-server-${{ runner.OS }}-${{ matrix.ghc }}.gz
         path: artifacts/haskell-language-server.gz
+
+    # - name: Upload HLS Wrapper Release Asset
+    #   if: matrix.ghc == '8.10.1'
+    #   uses: actions/upload-release-asset@v1
+    #   with:
+    #     upload_url: ${{ github.event.release.upload_url }}
+    #     asset_path: artifacts/haskell-language-server-wrapper.gz
+    #     asset_name: haskell-language-server-wrapper-${{ runner.OS }}.gz
+    #     asset_content_type: application/gzip
+
+    - name: Upload HLS Wrapper Artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: haskell-language-server-wrapper-${{ runner.OS }}.gz
+        path: artifacts/haskell-language-server-wrapper.gz
 
   # build-non-linux:
   #   runs-on: ${{ matrix.os }}
