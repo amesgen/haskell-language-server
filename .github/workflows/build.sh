@@ -1,4 +1,4 @@
 cabal update
-cabal build exe:haskell-language-server \
+cabal install exe:haskell-language-server \
       -O2 --ghc-options='-split-sections -static -optl-static -optl-pthread -fPIC' \
       --installdir=artifacts --install-method=copy --overwrite-policy=always
