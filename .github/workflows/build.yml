@@ -30,6 +30,7 @@ jobs:
           -w /mnt \
           utdemir/ghc-musl:v8-libgmp-ghc$(echo ${{ matrix.ghc }} | sed 's/\.//g') \
           bash /mnt/.github/workflows/build.sh
+        sudo chown -R $(whoami) .
 
     - name: Compress
       run: |
