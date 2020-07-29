@@ -47,121 +47,121 @@ jobs:
         name: haskell-language-server-Linux-${{ matrix.ghc }}.gz
         path: artifacts/haskell-language-server.gz
 
-  build-non-linux:
-    runs-on: ${{ matrix.os }}
+  # build-non-linux:
+  #   runs-on: ${{ matrix.os }}
 
-    strategy:
-      fail-fast: false
-      matrix:
-        ghc: ['8.10.1', '8.8.4', '8.8.3', '8.8.2', '8.6.5', '8.6.4']
-        os: [macOS-latest, windows-latest]
-        exclude:
-          - os: windows-latest
-            ghc: '8.8.4' # also fails due to segfault :(
-          - os: windows-latest
-            ghc: '8.8.3' # fails due to segfault
-          - os: windows-latest
-            ghc: '8.8.2' # fails due to error with Cabal
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       ghc: ['8.10.1', '8.8.4', '8.8.3', '8.8.2', '8.6.5', '8.6.4']
+  #       os: [macOS-latest, windows-latest]
+  #       exclude:
+  #         - os: windows-latest
+  #           ghc: '8.8.4' # also fails due to segfault :(
+  #         - os: windows-latest
+  #           ghc: '8.8.3' # fails due to segfault
+  #         - os: windows-latest
+  #           ghc: '8.8.2' # fails due to error with Cabal
 
-    steps:
-    - uses: actions/checkout@v2
-      with:
-        submodules: true
-    - uses: bubba/setup-haskell@d8110230d
-      with:
-        ghc-version: ${{ matrix.ghc }}
-        cabal-version: '3.2'
+  #   steps:
+  #   - uses: actions/checkout@v2
+  #     with:
+  #       submodules: true
+  #   - uses: bubba/setup-haskell@d8110230d
+  #     with:
+  #       ghc-version: ${{ matrix.ghc }}
+  #       cabal-version: '3.2'
 
-    - name: Shorten binary names
-      run: |
-        sed -i.bak -e 's/haskell-language-server/hls/g' \
-                   -e 's/haskell_language_server/hls/g' \
-                   haskell-language-server.cabal
-        sed -i.bak -e 's/Paths_haskell_language_server/Paths_hls/g' \
-                   src/**/*.hs exe/*.hs
+  #   - name: Shorten binary names
+  #     run: |
+  #       sed -i.bak -e 's/haskell-language-server/hls/g' \
+  #                  -e 's/haskell_language_server/hls/g' \
+  #                  haskell-language-server.cabal
+  #       sed -i.bak -e 's/Paths_haskell_language_server/Paths_hls/g' \
+  #                  src/**/*.hs exe/*.hs
 
-    - name: Set some window specific things
-      if: matrix.os == 'windows-latest'
-      run: |
-        echo '::set-env name=EXE_EXT::.exe'
+  #   - name: Set some window specific things
+  #     if: matrix.os == 'windows-latest'
+  #     run: |
+  #       echo '::set-env name=EXE_EXT::.exe'
 
-    - name: Build Server
-      # Try building it twice in case of flakey builds on Windows
-      run: |
-        cabal build exe:hls -O2 || \
-        cabal build exe:hls -O2 -j1
+  #   - name: Build Server
+  #     # Try building it twice in case of flakey builds on Windows
+  #     run: |
+  #       cabal build exe:hls -O2 || \
+  #       cabal build exe:hls -O2 -j1
 
-    - name: Compress Server Binary
-      id: compress_server_binary
-      env:
-        GHC_VER: ${{ matrix.ghc }}
-      run: |
-        HLS_BUILD=$(find dist-newstyle \( -name 'hls' -o -name 'hls.exe' \) -type f)
-        HLS=haskell-language-server-$GHC_VER
-        mv $HLS_BUILD $HLS
-        if [[ "$OSTYPE" == "msys" ]]; then
-          7z a $HLS.zip $HLS
-          echo ::set-output name=path::$HLS.zip
-          echo ::set-output name=content_type::application/zip
-          echo ::set-output name=extension::zip
-        else
-          gzip --best $HLS
-          echo ::set-output name=path::$HLS.gz
-          echo ::set-output name=content_type::application/gzip
-          echo ::set-output name=extension::gz
-        fi
+  #   - name: Compress Server Binary
+  #     id: compress_server_binary
+  #     env:
+  #       GHC_VER: ${{ matrix.ghc }}
+  #     run: |
+  #       HLS_BUILD=$(find dist-newstyle \( -name 'hls' -o -name 'hls.exe' \) -type f)
+  #       HLS=haskell-language-server-$GHC_VER
+  #       mv $HLS_BUILD $HLS
+  #       if [[ "$OSTYPE" == "msys" ]]; then
+  #         7z a $HLS.zip $HLS
+  #         echo ::set-output name=path::$HLS.zip
+  #         echo ::set-output name=content_type::application/zip
+  #         echo ::set-output name=extension::zip
+  #       else
+  #         gzip --best $HLS
+  #         echo ::set-output name=path::$HLS.gz
+  #         echo ::set-output name=content_type::application/gzip
+  #         echo ::set-output name=extension::gz
+  #       fi
 
-    - name: Upload Server Binary
-      uses: actions/upload-release-asset@v1.0.2
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ github.event.release.upload_url }}
-        asset_path: ${{ steps.compress_server_binary.outputs.path }}
-        asset_name: haskell-language-server-${{ runner.OS }}-${{ matrix.ghc }}${{env.EXE_EXT}}.${{ steps.compress_server_binary.outputs.extension }}
-        asset_content_type: ${{ steps.compress_server_binary.outputs.content_type }}
+  #   - name: Upload Server Binary
+  #     uses: actions/upload-release-asset@v1.0.2
+  #     env:
+  #       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  #     with:
+  #       upload_url: ${{ github.event.release.upload_url }}
+  #       asset_path: ${{ steps.compress_server_binary.outputs.path }}
+  #       asset_name: haskell-language-server-${{ runner.OS }}-${{ matrix.ghc }}${{env.EXE_EXT}}.${{ steps.compress_server_binary.outputs.extension }}
+  #       asset_content_type: ${{ steps.compress_server_binary.outputs.content_type }}
 
-    - uses: actions/upload-artifact@v2
-      with:
-        name: haskell-language-server-${{ runner.OS }}-${{ matrix.ghc }}${{env.EXE_EXT}}.gz
-        path: ${{ steps.compress_server_binary.outputs.path }}
+  #   - uses: actions/upload-artifact@v2
+  #     with:
+  #       name: haskell-language-server-${{ runner.OS }}-${{ matrix.ghc }}${{env.EXE_EXT}}.gz
+  #       path: ${{ steps.compress_server_binary.outputs.path }}
 
-    - name: Build Wrapper
-      if: matrix.ghc == '8.10.1'
-      run: cabal build exe:hls-wrapper -O2
+  #   - name: Build Wrapper
+  #     if: matrix.ghc == '8.10.1'
+  #     run: cabal build exe:hls-wrapper -O2
 
-    - name: Compress Wrapper Binary
-      if: matrix.ghc == '8.10.1'
-      id: compress_wrapper_binary
-      run: |
-        HLS_WRAPPER_BUILD=$(find dist-newstyle \( -name 'hls-wrapper' -o -name 'hls-wrapper.exe' \) -type f)
-        HLS_WRAPPER=haskell-language-server-wrapper
-        mv $HLS_WRAPPER_BUILD $HLS_WRAPPER
-        if [[ "$OSTYPE" == "msys" ]]; then
-          7z a $HLS_WRAPPER.zip $HLS_WRAPPER
-          echo ::set-output name=path::$HLS_WRAPPER.zip
-          echo ::set-output name=content_type::application/zip
-          echo ::set-output name=extension::zip
-        else
-          gzip --best $HLS_WRAPPER
-          echo ::set-output name=path::$HLS_WRAPPER.gz
-          echo ::set-output name=content_type::application/gzip
-          echo ::set-output name=extension::gz
-        fi
+  #   - name: Compress Wrapper Binary
+  #     if: matrix.ghc == '8.10.1'
+  #     id: compress_wrapper_binary
+  #     run: |
+  #       HLS_WRAPPER_BUILD=$(find dist-newstyle \( -name 'hls-wrapper' -o -name 'hls-wrapper.exe' \) -type f)
+  #       HLS_WRAPPER=haskell-language-server-wrapper
+  #       mv $HLS_WRAPPER_BUILD $HLS_WRAPPER
+  #       if [[ "$OSTYPE" == "msys" ]]; then
+  #         7z a $HLS_WRAPPER.zip $HLS_WRAPPER
+  #         echo ::set-output name=path::$HLS_WRAPPER.zip
+  #         echo ::set-output name=content_type::application/zip
+  #         echo ::set-output name=extension::zip
+  #       else
+  #         gzip --best $HLS_WRAPPER
+  #         echo ::set-output name=path::$HLS_WRAPPER.gz
+  #         echo ::set-output name=content_type::application/gzip
+  #         echo ::set-output name=extension::gz
+  #       fi
 
-    - name: Upload Wrapper
-      if: matrix.ghc == '8.10.1'
-      uses: actions/upload-release-asset@v1.0.2
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ github.event.release.upload_url }}
-        asset_path: ${{ steps.compress_wrapper_binary.outputs.path }}
-        asset_name: haskell-language-server-wrapper-${{ runner.OS }}${{env.EXE_EXT}}.${{ steps.compress_wrapper_binary.outputs.extension }}
-        asset_content_type: ${{ steps.compress_wrapper_binary.outputs.content_type}}
+  #   - name: Upload Wrapper
+  #     if: matrix.ghc == '8.10.1'
+  #     uses: actions/upload-release-asset@v1.0.2
+  #     env:
+  #       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  #     with:
+  #       upload_url: ${{ github.event.release.upload_url }}
+  #       asset_path: ${{ steps.compress_wrapper_binary.outputs.path }}
+  #       asset_name: haskell-language-server-wrapper-${{ runner.OS }}${{env.EXE_EXT}}.${{ steps.compress_wrapper_binary.outputs.extension }}
+  #       asset_content_type: ${{ steps.compress_wrapper_binary.outputs.content_type}}
 
-    - uses: actions/upload-artifact@v2
-      if: matrix.ghc == '8.10.1'
-      with:
-        name: haskell-language-server-wrapper-${{ runner.OS }}${{env.EXE_EXT}}.gz
-        path: ${{ steps.compress_wrapper_binary.outputs.path }}
+  #   - uses: actions/upload-artifact@v2
+  #     if: matrix.ghc == '8.10.1'
+  #     with:
+  #       name: haskell-language-server-wrapper-${{ runner.OS }}${{env.EXE_EXT}}.gz
+  #       path: ${{ steps.compress_wrapper_binary.outputs.path }}
