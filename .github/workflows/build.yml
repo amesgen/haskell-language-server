@@ -9,14 +9,41 @@ on:
     types: [created]
 jobs:
 
-  build:
+  build-linux:
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        ghc: ['8.10.1', '8.8.3', '8.6.5']
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: true
+
+    - name: Build Server
+      run: |
+        docker run \
+          -v $(pwd):/mnt \
+          -e GHC_VERSION=${{ matrix.ghc }} \
+          -w /mnt \
+          utdemir/ghc-musl:v8-libgmp-ghc$(echo ${{ matrix.ghc }} | sed 's/\.//g') \
+          bash /mnt/.github/workflows/build.sh
+
+    - uses: actions/upload-artifact@v2
+      with:
+        name: haskell-language-server-Linux-${{ matrix.ghc }}
+        path: artifacts/haskell-language-server
+
+  build-non-linux:
     runs-on: ${{ matrix.os }}
 
     strategy:
       fail-fast: false
       matrix:
         ghc: ['8.10.1', '8.8.4', '8.8.3', '8.8.2', '8.6.5', '8.6.4']
-        os: [ubuntu-latest, macOS-latest, windows-latest]
+        os: [macOS-latest, windows-latest]
         exclude:
           - os: windows-latest
             ghc: '8.8.4' # also fails due to segfault :(
@@ -47,16 +74,11 @@ jobs:
       run: |
         echo '::set-env name=EXE_EXT::.exe'
 
-    - name: Set some linux specific things
-      if: matrix.os == 'ubuntu-latest'
-      run: |
-        echo '::set-env name=LINUX_CABAL_ARGS::--enable-executable-static --ghc-options=-split-sections'
-
     - name: Build Server
       # Try building it twice in case of flakey builds on Windows
       run: |
-        cabal build exe:hls -O2 $LINUX_CABAL_ARGS || \
-        cabal build exe:hls -O2 $LINUX_CABAL_ARGS -j1
+        cabal build exe:hls -O2 || \
+        cabal build exe:hls -O2 -j1
 
     - name: Compress Server Binary
       id: compress_server_binary
@@ -95,7 +117,7 @@ jobs:
 
     - name: Build Wrapper
       if: matrix.ghc == '8.10.1'
-      run: cabal build exe:hls-wrapper -O2 $LINUX_CABAL_ARGS
+      run: cabal build exe:hls-wrapper -O2
 
     - name: Compress Wrapper Binary
       if: matrix.ghc == '8.10.1'
@@ -132,4 +154,3 @@ jobs:
       with:
         name: haskell-language-server-wrapper-${{ runner.OS }}${{env.EXE_EXT}}.gz
         path: ${{ steps.compress_wrapper_binary.outputs.path }}
-
