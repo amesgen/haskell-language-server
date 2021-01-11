@@ -244,7 +244,7 @@ loadSessionWithOptions SessionLoadingOptions{..} dir = do
           -- some code. If the binary is dynamically linked, then this will have
           -- no effect.
           -- See https://github.com/haskell/haskell-language-server/issues/221
-          when (os == "linux") $ do
+          when (False && os == "linux") $ do
             initObjLinker hscEnv
             res <- loadDLL hscEnv "libm.so.6"
             case res of
